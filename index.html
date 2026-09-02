@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Apple Pay Payment App</title>
+<style>/* Apple system font stack and background */
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background-color: #f5f5f7;
+    margin: 0;
+    color: #1d1d1f;
+    min-height: 100vh;
+    padding-bottom: 20px;
+  }
+  #app {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 12px 16px 20px;
+  }
+  h2, h3 {
+    margin-left: 0;
+    color: #1d1d1f;
+  }
+
+  /* Favorites header */
+  .favorites-header {
+    font-weight: 700;
+    font-size: 19px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #1d1d1f;
+    user-select: none;
+  }
+  .favorites-header > .icon {
+    font-size: 20px;
+  }
+
+  /* Favorites container - Compact */
+  .favorites-container {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-start;
+    margin-bottom: 20px;
+  }
+  .favorite {
+    text-align: center;
+    font-size: 12px;
+    color: #1d1d1f;
+    user-select: none;
+    width: 64px;
+  }
+  .fav-icon-wrapper {
+    background-color: #fff;
+    border-radius: 16px;
+    padding: 10px;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.12);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 64px;
+    margin-bottom: 4px;
+    transition: box-shadow 0.25s ease;
+  }
+  .fav-icon-wrapper:hover,
+  .fav-icon-wrapper:focus-within {
+    box-shadow: 0 4px 10px rgb(0 0 0 / 0.2);
+  }
+  .favorite img {
+    max-width: 36px;
+    max-height: 36px;
+    border-radius: 8px;
+    filter: none;
+    user-select:none;
+  }
+
+  /* Privacy Report - Compact */
+  .privacy-report {
+    background-color: #fff;
+    border-radius: 16px;
+    padding: 12px 16px;
+    max-width: 360px;
+    margin: 0 auto 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #1d1d1f;
+    user-select: none;
+  }
+  .privacy-report svg {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+  }
+  .privacy-report .shield-number {
+    font-size: 20px;
+  }
+  .privacy-report .text {
+    font-weight: 400;
+    font-size: 14px;
+    max-width: 260px;
+    line-height: 1.3;
+  }
+
+  /* Edit button - Compact */
+  .edit-button-wrapper {
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .edit-button {
+    background-color: #efeff4;
+    border-radius: 18px;
+    padding: 8px 40px;
+    font-weight: 600;
+    font-size: 15px;
+    border: none;
+    color: #1d1d1f;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: none;
+    transition: background-color 0.25s ease;
+  }
+  .edit-button:hover,
+  .edit-button:focus {
+    background-color: #d3d3d8;
+  }
+
+  /* Payment Box - Compact, no Apple Pay logo */
+  .payment-box {
+    background-color: #fff;
+    max-width: 360px;
+    margin: 0 auto;
+    border-radius: 24px;
+    padding: 24px 24px 28px;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+    text-align: center;
+    font-weight: 700;
+    font-size: 20px;
+    user-select: none;
+    position: relative;
+    font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  .payment-box .item-label {
+    font-weight: 500;
+    font-size: 14px;
+    margin-bottom: 6px;
+    color: #1d1d1f;
+  }
+  .payment-box .amount {
+    font-weight: 800;
+    font-size: 32px;
+    margin-bottom: 12px;
+    letter-spacing: -0.03em;
+    color: #000;
+  }
+  .payment-box .pay-method {
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: #000;
+  }
+  .payment-box .payment-info {
+    margin-top: 12px;
+    margin-bottom: 20px;
+    font-weight: 400;
+    font-size: 14px;
+    color: #444;
+    text-align: left;
+    max-width: 280px;
+    margin-left: auto;
+    margin-right: auto;
+    user-select:none;
+  }
+  .payment-box .payment-info > div {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .payment-box .payment-info > div span:last-child {
+    color: #888;
+    font-weight: 600;
+  }
+
+  /* Spinner - Compact */
+  .spinner {
+    margin-bottom: 12px;
+  }
+  .spinner svg {
+    animation: spin 0.8s linear infinite;
+    width: 32px;
+    height: 32px;
+  }
+
+  .processing-text {
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 2px;
+    color: #000;
+  }
+  .processing-subtext {
+    font-weight: 400;
+    font-size: 12px;
+    color: #666;
+  }
+
+  /* Face ID - Compact */
+  .face-id {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #007aff;
+    font-weight: 500;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: 0;
+  }
+  .face-id svg {
+    width: 32px;
+    height: 32px;
+    stroke: #007aff;
+  }
+
+  /* Cancel button */
+  .cancel-button {
+    margin-top: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 0;
+    color: #007aff;
+    background: none;
+    border: none;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 10px;
+    transition: background-color 0.25s ease;
+  }
+  .cancel-button:hover,
+  .cancel-button:focus {
+    background-color: #efeff4;
+  }
+
+  /* Complete Stage card - Compact */
+  .payment-complete-box {
+    background-color: #fff;
+    max-width: 360px;
+    margin: 0 auto;
+    border-radius: 24px;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+    padding: 28px 24px;
+    text-align: center;
+    user-select: none;
+    font-size: 18px;
+    font-weight: 700;
+    position: relative;
+  }
+  .payment-complete-box .subtitle {
+    font-weight: 500;
+    font-size: 15px;
+    margin-bottom: 12px;
+    color: #1d1d1f;
+  }
+  .payment-complete-box img {
+    max-height: 64px;
+    object-fit: contain;
+    margin-bottom: 16px;
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: none;
+  }
+  .payment-complete-box .success-text {
+    color: #34c759;
+    margin-bottom: 6px;
+    font-weight: 800;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    font-size: 17px;
+  }
+  .payment-complete-box .success-text svg {
+    vertical-align: middle;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .payment-complete-box .amount-text {
+    font-weight: 500;
+    font-size: 14px;
+    margin-bottom: 24px;
+    color: #1d1d1f;
+  }
+
+  /* Compact Receipt */
+  .receipt-container {
+    max-width: 420px;
+    margin: 0 auto;
+    color: #1d1d1f;
+    font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  .receipt-header, .receipt-section, .receipt-footer {
+    text-align: center;
+    font-weight: 400;
+    font-size: 14px;
+    user-select: none;
+  }
+  .receipt-header p {
+    margin-bottom: 10px;
+    font-weight: 500;
+    font-size: 12px;
+    color: #444;
+  }
+  .receipt-header a {
+    color: #007aff;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .call-now-button {
+    background-color: #007aff;
+    color: white;
+    border-radius: 10px;
+    padding: 10px 28px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    user-select: none;
+    font-size: 14px;
+    margin-bottom: 28px;
+    box-shadow: 0 4px 16px rgba(0, 122, 255, 0.4);
+  }
+  .receipt-section img {
+    max-height: 68px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    display: none;
+  }
+  .order-summary {
+    font-weight: 600;
+    max-width: 420px;
+    margin: 0 auto 28px;
+    padding: 0 8px;
+    color: #1d1d1f;
+    text-align: left;
+  }
+  .order-summary h3 {
+    margin-bottom: 12px;
+    font-weight: 700;
+    font-size: 18px;
+    user-select: none;
+  }
+  .order-summary .summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #222;
+  }
+  .order-summary .summary-row.total {
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  .order-summary .summary-detail {
+    font-weight: 400;
+    color: #666;
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+  hr {
+    border-color: #ddd;
+    border-style: solid;
+    border-width: 0 0 1px 0;
+    margin: 12px 0;
+  }
+  .payment-method {
+    margin-top: 32px;
+    margin-bottom: 8px;
+    font-weight: 700;
+    font-size: 18px;
+    user-select: none;
+    color: #1d1d1f;
+  }
+  .payment-method-box {
+    background-color: #f4f4f7;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-weight: 500;
+    color: #444;
+    font-size: 15px;
+    user-select: none;
+  }
+  .order-info {
+    background-color: #ededf2;
+    font-size: 13px;
+    color: #666;
+    margin-top: 16px;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-weight: 400;
+    user-select: none;
+  }
+  .order-info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .order-info-row:last-child {
+    margin-bottom: 0;
+  }
+  .order-info-row > div:last-child {
+    font-weight: 600;
+    color: #1d1d1f;
+  }
+  .support-section {
+    max-width: 420px;
+    margin: 0 auto 24px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 15px;
+    user-select: none;
+    color: #111;
+  }
+  .support-section button.call-now-button {
+    margin-top: 10px;
+  }
+
+  .receipt-footer {
+    max-width: 420px;
+    margin: 0 auto;
+    text-align: center;
+    font-size: 11px;
+    color: #666;
+    font-weight: 400;
+    user-select: none;
+    line-height: 1.4;
+  }
+  .receipt-footer p {
+    margin-bottom: 6px;
+  }
+  .receipt-footer a {
+    color: #007aff;
+    text-decoration: none;
+    margin-right: 16px;
+  }
+  .receipt-footer a:last-child {
+    margin-right: 0;
+  }
+  .receipt-buttons {
+    max-width: 420px;
+    margin: 0 auto 30px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    user-select: none;
+  }
+  .print-button {
+    border: 1.5px solid #007aff;
+    border-radius: 10px;
+    padding: 10px 24px;
+    background-color: white;
+    color: #007aff;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 15px;
+    flex: 1;
+    box-shadow: none;
+    transition: background-color 0.25s ease;
+  }
+  .print-button:hover {
+    background-color: #e5e5ea;
+  }
+  .download-pdf-button {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 24px;
+    background-color: #007aff;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 15px;
+    flex: 1;
+    box-shadow: 0 4px 16px rgba(0, 122, 255, 0.4);
+    transition: background-color 0.25s ease;
+  }
+  .download-pdf-button:hover {
+    background-color: #005fcc;
+  }
+
+  /* Top-left time styling */
+  #time-display {
+    position: fixed;
+    top: 6px;
+    left: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #222;
+    user-select:none;
+    font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    z-index: 9999;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @media (max-height: 700px) {
+    #app { padding: 8px 12px 12px; }
+    .payment-box { padding: 20px 20px 24px; }
+    .payment-complete-box { padding: 24px 20px; }
+    .favorites-container { gap: 10px; margin-bottom: 16px; }
+    .favorite { width: 58px; }
+    .fav-icon-wrapper { height: 58px; padding: 8px; }
+    .favorite img { max-width: 32px; max-height: 32px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  (function(){
+    const { jsPDF } = window.jspdf;
+
+    const APPLE_PAY_SOUND_URL = "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg";
+    const ICLOUD_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Apple_iCloud_logo.svg/512px-Apple_iCloud_logo.svg.png";
+
+    const favorites = [
+      {
+        name: "Apple",
+        iconUrl: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg",
+      },
+      {
+        name: "iCloud",
+        iconUrl: ICLOUD_IMAGE,
+      },
+      {
+        name: "Google",
+        iconUrl: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg",
+      },
+      {
+        name: "Yahoo",
+        iconUrl: "https://s.yimg.com/rz/l/yahoo_en-US_f_p_142x37.png",
+      },
+    ];
+
+    let stage = localStorage.getItem("stage") === "receipt" ? "receipt" : "payment";
+
+    const app = document.getElementById("app");
+    const audio = new Audio(APPLE_PAY_SOUND_URL);
+    audio.preload = "auto";
+
+    function createElement(tag, attrs = {}, children = []) {
+      const el = document.createElement(tag);
+      Object.entries(attrs).forEach(([key, value]) => {
+        if(key === "className") el.className = value;
+        else if(key.startsWith("on") && typeof value === "function") {
+          el.addEventListener(key.slice(2).toLowerCase(), value);
+        } else if (key === "html") {
+          el.innerHTML = value;
+        } else {
+          el.setAttribute(key, value);
+        }
+      });
+      children.forEach(child => {
+        if (typeof child === "string") el.appendChild(document.createTextNode(child));
+        else el.appendChild(child);
+      });
+      return el;
+    }
+
+    function clearElement(el) {
+      while (el.firstChild) el.removeChild(el.firstChild);
+    }
+
+    function dialPhoneNumber(phone) {
+      window.location.href = `tel:${phone}`;
+    }
+
+    function createElementNS(tag, attrs = {}) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      Object.entries(attrs).forEach(([key, value]) => {
+        el.setAttribute(key, value);
+      });
+      return el;
+    }
+
+    function renderFavorites() {
+      const container = createElement("div", { className: "favorites-container" });
+      favorites.forEach(({ name, iconUrl }) => {
+        const favIconWrapper = createElement("div", { className: "fav-icon-wrapper" }, [
+          createElement("img", { src: iconUrl, alt: name, loading: "lazy" })
+        ]);
+        const favoriteDiv = createElement("div", { className: "favorite" }, [
+          favIconWrapper,
+          createElement("div", {}, [name])
+        ]);
+        container.appendChild(favoriteDiv);
+      });
+      return container;
+    }
+
+    function renderPrivacyReport() {
+      const shieldSvg = createElementNS("svg", {
+        height: "20",
+        width: "20",
+        fill: "black",
+        viewBox: "0 0 24 24",
+        style: "flex-shrink:0;"
+      });
+      const path = createElementNS("path", { 
+        d: "M12 2L3 5v6c0 5.25 3.44 9.75 9 11 5.56-1.25 9-5.75 9-11V5l-9-3zM7.5 11.5a1.5 1.5 0 113 0v4a1.5 1.5 0 11-3 0v-4z" 
+      });
+      shieldSvg.appendChild(path);
+      return createElement("div", { className: "privacy-report" }, [
+        shieldSvg,
+        createElement("span", { className: "shield-number" }, ["11"]),
+        createElement("span", { className: "text" }, ["Safari has prevented 11 trackers from profiling you."])
+      ]);
+    }
+
+    function createPaymentInfo() {
+      const container = createElement("div", { className: "payment-info" });
+      const paymentRow = createElement("div", {}, [
+        createElement("span", {}, ["Payment"]),
+        createElement("span", {}, ["Apple Pay >"])
+      ]);
+      const billingRow = createElement("div", {}, [
+        createElement("span", {}, ["Billing"]),
+        createElement("span", {}, ["Same as shipping >"])
+      ]);
+      container.appendChild(paymentRow);
+      container.appendChild(billingRow);
+      return container;
+    }
+
+    function createSpinner() {
+      const spinner = createElement("div", { className: "spinner" });
+      const svg = createElementNS("svg", {
+        xmlns: "http://www.w3.org/2000/svg",
+        height: "32",
+        viewBox: "0 0 50 50",
+        width: "32",
+        fill: "#333"
+      });
+      const path = createElementNS("path", {
+        d: "M43.935,25.145c0-10.318-8.364-18.682-18.682-18.682c-10.317,0-18.681,8.364-18.681,18.682h4.068 c0-8.078,6.535-14.613,14.613-14.613c8.078,0,14.614,6.536,14.614,14.613H43.935z"
+      });
+      const animate = createElementNS("animateTransform", {
+        attributeType: "xml",
+        attributeName: "transform",
+        type: "rotate",
+        from: "0 25 25",
+        to: "360 25 25",
+        dur: "0.8s",
+        repeatCount: "indefinite"
+      });
+      path.appendChild(animate);
+      svg.appendChild(path);
+      spinner.appendChild(svg);
+      return spinner;
+    }
+
+    function createProcessingText() {
+      const container = createElement("div");
+      const boldText = createElement("div", { className: "processing-text" }, ["Processing Payment"]);
+      const subText = createElement("div", { className: "processing-subtext" }, ["Please wait..."]);
+      container.appendChild(boldText);
+      container.appendChild(subText);
+      return container;
+    }
+
+    function createFaceID() {
+      const container = createElement("div", { className: "face-id" });
+      const svg = createElementNS("svg", {
+        width: "32",
+        height: "32",
+        viewBox: "0 0 24 24",
+        fill: "none",
+        stroke: "#007aff",
+        strokeWidth: "2",
+        strokeLinecap: "round",
+        strokeLinejoin: "round"
+      });
+      const rect = createElementNS("rect", { x: "8", y: "3", width: "8", height: "11", rx: "1", ry: "1" });
+      const path1 = createElementNS("path", { d: "M12 14v7" });
+      const path2 = createElementNS("path", { d: "M8 14h8" });
+      const path3 = createElementNS("path", { d: "M12 7h.01" });
+      svg.appendChild(rect);
+      svg.appendChild(path1);
+      svg.appendChild(path2);
+      svg.appendChild(path3);
+      container.appendChild(svg);
+      container.appendChild(document.createTextNode("Pay with Face ID"));
+      return container;
+    }
+
+    function createCancelButton() {
+      const btn = createElement("button", {
+        className: "cancel-button",
+        onclick: () => setStage("receipt")
+      }, ["Cancel"]);
+      return btn;
+    }
+
+    function formatDate(date) {
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      return date.toLocaleDateString(undefined, options);
+    }
+
+    function formatTime(date) {
+      const options = { hour: 'numeric', minute: 'numeric', hour12: true };
+      return date.toLocaleTimeString(undefined, options);
+    }
+
+    function renderPaymentStage() {
+      clearElement(app);
+
+      const root = createElement("div");
+
+      // Header and favorites
+      const header = createElement("h2", { className: "favorites-header" }, [
+        createElement("span", { className: "icon" }, ["👤"]),
+        "Favorites"
+      ]);
+      root.appendChild(header);
+      root.appendChild(renderFavorites());
+
+      // Privacy
+      const privacyTitle = createElement("h3", { style: "font-weight:700; font-size:19px; margin-bottom:8px;" }, ["Privacy Report"]);
+      root.appendChild(privacyTitle);
+      root.appendChild(renderPrivacyReport());
+
+      // Edit
+      const editDiv = createElement("div", { className: "edit-button-wrapper" });
+      const editBtn = createElement("button", { className: "edit-button" }, ["Edit"]);
+      editDiv.appendChild(editBtn);
+      root.appendChild(editDiv);
+
+      // Payment card - Apple Pay logo/icon completely removed, just text
+      const paymentBox = createElement("div", { className: "payment-box" }, [
+        createElement("div", { className: "item-label" }, ["Pay iCloud Storage"]),
+        createElement("div", { className: "amount" }, ["$449.95"]),
+        createElement("div", { className: "pay-method" }, [" Pay"]),
+        createPaymentInfo(),
+        createSpinner(),
+        createProcessingText(),
+        createFaceID(),
+        createCancelButton()
+      ]);
+      root.appendChild(paymentBox);
+
+      // Time display
+      let timeDisplay = document.getElementById('time-display');
+      if (!timeDisplay) {
+        timeDisplay = createElement("div", { id: "time-display" }, [formatTime(new Date())]);
+        document.body.appendChild(timeDisplay);
+      }
+
+      app.appendChild(root);
+
+      // Update time every minute
+      clearInterval(window.timeUpdateInterval);
+      window.timeUpdateInterval = setInterval(() => {
+        const now = new Date();
+        if (timeDisplay && timeDisplay.textContent) {
+          timeDisplay.textContent = formatTime(now);
+        }
+      }, 60000);
+
+      // Auto advance to complete
+      setTimeout(() => {
+        if (timeDisplay && timeDisplay.parentNode) {
+          timeDisplay.parentNode.removeChild(timeDisplay);
+        }
+        setStage("complete");
+        audio.play().catch(() => {});
+      }, 3500);
+    }
+
+    function renderCompleteStage() {
+      clearElement(app);
+
+      const root = createElement("div");
+
+      const header = createElement("h2", { className: "favorites-header" }, [
+        createElement("span", { className: "icon" }, ["👤"]),
+        "Favorites"
+      ]);
+      root.appendChild(header);
+      root.appendChild(renderFavorites());
+
+      const privacyTitle = createElement("h3", { style: "font-weight:700; font-size:19px; margin-bottom:8px;" }, ["Privacy Report"]);
+      root.appendChild(privacyTitle);
+      root.appendChild(renderPrivacyReport());
+
+      const paymentCompleteBox = createElement("div", { className: "payment-complete-box" });
+      paymentCompleteBox.appendChild(createElement("div", { className: "subtitle" }, ["iCloud Storage"]));
+      
+      const successDiv = createElement("div", { className: "success-text" }, []);
+      const checkSvg = createElementNS("svg", {
+        width: "26",
+        height: "26",
+        viewBox: "0 0 24 24",
+        fill: "none",
+        stroke: "currentColor",
+        strokeWidth: "3",
+        strokeLinecap: "round",
+        strokeLinejoin: "round"
+      });
+      const polyline = createElementNS("polyline", { points: "20 6 9 17 4 12" });
+      checkSvg.appendChild(polyline);
+      successDiv.appendChild(checkSvg);
+      successDiv.appendChild(document.createTextNode("Payment Complete"));
+      paymentCompleteBox.appendChild(successDiv);
+      paymentCompleteBox.appendChild(createElement("div", { className: "amount-text" }, ["$449.95 to iCloud Storage"]));
+      
+      root.appendChild(paymentCompleteBox);
+
+      setTimeout(() => setStage("receipt"), 2200);
+      app.appendChild(root);
+    }
+
+    function createOrderInfoRow(label, value) {
+      return createElement("div", { className: "order-info-row" }, [
+        createElement("div", {}, [label]),
+        createElement("div", {}, [value])
+      ]);
+    }
+
+    function renderReceiptStage() {
+      clearElement(app);
+
+      const container = createElement("div", { className: "receipt-container" });
+
+      // Support header
+      const supportText = createElement("p", {}, ["For support or refund, contact Apple Support at "]);
+      const supportLink = createElement("a", { href: "tel:+1 (860) 294-8076" }, ["+1 (860) 294-8076"]);
+      supportText.appendChild(supportLink);
+      
+      const header = createElement("header", { className: "receipt-header" }, []);
+      header.appendChild(supportText);
+      const callNowBtn = createElement("button", {
+        className: "call-now-button",
+        onclick: () => dialPhoneNumber("+1 (860) 294-8076")
+      }, ["Call Now"]);
+      header.appendChild(callNowBtn);
+      container.appendChild(header);
+
+      // Order section
+      const orderSection = createElement("section", { className: "receipt-section" });
+      const thankYouTextWrapper = createElement("div", { style: "font-size:16px; font-weight:600; margin-bottom:20px;" }, ["Thanks, your iCloud Storage has been purchased successfully."]);
+      orderSection.appendChild(thankYouTextWrapper);
+      container.appendChild(orderSection);
+
+      // Order Summary
+      const orderSummary = createElement("section", { className: "order-summary" });
+      orderSummary.appendChild(createElement("h3", {}, ["Order Summary"]));
+      orderSummary.appendChild(createElement("div", { className: "summary-row" }, [
+        createElement("div", {}, ["iCloud Storage"]),
+        createElement("div", {}, ["$449.95"])
+      ]));
+      orderSummary.appendChild(createElement("div", { className: "summary-detail" }, ["Digital delivery via email"]));
+      orderSummary.appendChild(createElement("hr"));
+      orderSummary.appendChild(createElement("div", { className: "summary-row total" }, [
+        createElement("div", {}, ["Total"]),
+        createElement("div", {}, ["$449.95"])
+      ]));
+
+      orderSummary.appendChild(createElement("h3", { className: "payment-method" }, ["Payment Method"]));
+      orderSummary.appendChild(createElement("div", { className: "payment-method-box" }, ["Apple Pay"]));
+
+      const orderInfo = createElement("div", { className: "order-info" });
+      orderInfo.appendChild(createOrderInfoRow("Order Number", "APL847291025"));
+      orderInfo.appendChild(createOrderInfoRow("Order Date", formatDate(new Date())));
+      orderInfo.appendChild(createOrderInfoRow("Payment Status", "Paid"));
+      orderSummary.appendChild(orderInfo);
+      container.appendChild(orderSummary);
+
+      // Support section
+      const supportSection = createElement("section", { className: "support-section" }, [
+        "Questions? We're here to help."
+      ]);
+      const supportCallBtn = createElement("button", {
+        className: "call-now-button",
+        onclick: () => dialPhoneNumber("+1 (860) 294-8076")
+      }, ["Call Now"]);
+      supportSection.appendChild(supportCallBtn);
+      container.appendChild(supportSection);
+
+      // Buttons
+      const buttonsSection = createElement("section", { className: "receipt-buttons" });
+      const printBtn = createElement("button", {
+        className: "print-button",
+        onclick: printReceipt
+      }, ["Print Receipt"]);
+      const downloadBtn = createElement("button", {
+        className: "download-pdf-button",
+        onclick: downloadPdf
+      }, ["Download PDF"]);
+      buttonsSection.appendChild(printBtn);
+      buttonsSection.appendChild(downloadBtn);
+      container.appendChild(buttonsSection);
+
+      // Footer
+      const footer = createElement("footer", { className: "receipt-footer" });
+      footer.appendChild(createElement("p", {}, [
+        "For questions about your order, call ",
+        createElement("a", { href: "tel:+1 (860) 294-8076" }, ["+1 (860) 294-8076"])
+      ]));
+      footer.appendChild(createElement("p", { style: "margin-bottom:0; font-size:11px;" }, [
+        "Apple Inc.",
+        createElement("br"),
+        "One Apple Park Way, Cupertino, CA 95014, U.S.A.",
+        createElement("br"),
+        "All rights reserved."
+      ]));
+      const legalLinks = createElement("div", {}, [
+        createElement("a", { href: "https://www.apple.com/legal/privacy/en-ww/", target: "_blank", rel: "noreferrer" }, ["Privacy"]),
+        createElement("a", { href: "https://www.apple.com/legal/sales-terms/", target: "_blank", rel: "noreferrer" }, ["Terms"]),
+        createElement("a", { href: "https://www.apple.com/legal/", target: "_blank", rel: "noreferrer" }, ["Legal"])
+      ]);
+      footer.appendChild(legalLinks);
+      container.appendChild(footer);
+
+      app.appendChild(container);
+    }
+
+    function setStage(newStage) {
+      stage = newStage;
+      if (stage === "receipt") {
+        localStorage.setItem("stage", "receipt");
+      } else {
+        localStorage.removeItem("stage");
+      }
+      render();
+    }
+
+    function render() {
+      if(stage === "payment") {
+        renderPaymentStage();
+      } else if (stage === "complete") {
+        renderCompleteStage();
+      } else if (stage === "receipt") {
+        renderReceiptStage();
+      }
+    }
+
+    function printReceipt() {
+      window.print();
+    }
+
+    function downloadPdf() {
+      const doc = new jsPDF();
+      const today = new Date();
+      doc.setFontSize(14);
+      doc.text("Order Summary", 10, 20);
+      doc.setFontSize(12);
+      doc.text("iCloud Storage", 10, 32);
+      doc.text("$449.95", 150, 32);
+      doc.text("Digital delivery via email", 10, 40);
+      doc.setLineWidth(0.5);
+      doc.line(10, 42, 200, 42);
+      doc.setFontSize(14);
+      doc.text("Total", 10, 50);
+      doc.text("$449.95", 150, 50);
+      doc.setFontSize(14);
+      doc.text("Payment Method", 10, 62);
+      doc.setFontSize(12);
+      doc.text("Apple Pay", 10, 70);
+      doc.setFillColor(240);
+      doc.rect(10, 72, 190, 28, "F");
+      doc.setFontSize(10);
+      doc.text("Order Number: APL847291025", 12, 80);
+      doc.text("Order Date: " + formatDate(today), 12, 86);
+      doc.text("Payment Status: Paid", 12, 92);
+      doc.save("iCloud_Receipt.pdf");
+    }
+
+    render();
+  })();
+</script>
+</body>
+</html>
+
+
